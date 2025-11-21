@@ -7,9 +7,13 @@ import 'package:flutter/src/widgets/framework.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 class WidgetForm {
-  static void show(BuildContext context) async {
-    final TextEditingController nameController = TextEditingController();
-    final TextEditingController ageController = TextEditingController();
+  static void show(BuildContext context, [Student? student]) async {
+    final TextEditingController nameController = TextEditingController(
+      text: student?.name,
+    );
+    final TextEditingController ageController = TextEditingController(
+      text: student?.age.toString(),
+    );
     final bloc = context.read<StudentBloc>();
 
     await showDialog<void>(
@@ -18,7 +22,9 @@ class WidgetForm {
       // false = user must tap button, true = tap outside dialog
       builder: (BuildContext dialogContext) {
         return AlertDialog(
-          title: Text('Agregar Estudihambre'),
+          title: student == null
+              ? Text('Agregar Estudihambre')
+              : Text("Modificar Estudiante"),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -57,18 +63,30 @@ class WidgetForm {
             CupertinoButton.filled(
               borderRadius: const BorderRadius.all(Radius.circular(8.0)),
               color: CupertinoColors.systemYellow,
-              child: Text("Agregar"),
+              child: student == null ? Text("Agregar") : Text("Actualizar"),
               onPressed: () {
                 if (nameController.text.isNotEmpty ||
                     ageController.text.isNotEmpty) {
-                  bloc.add(
-                    CreateStudent(
-                      Student(
-                        name: nameController.text,
-                        age: int.tryParse(ageController.text) ?? 0,
+                  if (student == null) {
+                    bloc.add(
+                      CreateStudent(
+                        Student(
+                          name: nameController.text,
+                          age: int.tryParse(ageController.text) ?? 0,
+                        ),
                       ),
-                    ),
-                  );
+                    );
+                  } else {
+                    bloc.add(
+                      UpdateStudent(
+                        student.copyWith(
+                          id: student.id,
+                          name: nameController.text,
+                          age: int.tryParse(ageController.text) ?? 0,
+                        ),
+                      ),
+                    );
+                  }
                   Navigator.of(dialogContext).pop(); // Dismiss alert dialog
                 } else {
                   Navigator.of(dialogContext).pop(); // Dismiss alert dialog
